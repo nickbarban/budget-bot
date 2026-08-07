@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Budget Bot Backend API
+  version: 1.0.0
+servers:
+  - url: https://budget-api.example.com
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/v1/health:
+    get:
+      operationId: health
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: UP }
+
+  /api/v1/users/telegram/{telegramUserId}/bootstrap:
+    post:
+      operationId: bootstrapTelegramUser
+      parameters:
+        - $ref: '#/components/parameters/TelegramUserId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramProfile'
+      responses:
+        '200':
+          description: User ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /api/v1/users/telegram/{telegramUserId}/budget/status:
+    get:
+      operationId: getBudgetStatus
+      parameters:
+        - $ref: '#/components/parameters/TelegramUserId'
+      responses:
+        '200':
+          description: Current accumulated daily budget status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetStatusResponse'
+
+  /api/v1/users/telegram/{telegramUserId}/budget/daily:
+    put:
+      operationId: setDailyBudget
+      parameters:
+        - $ref: '#/components/parameters/TelegramUserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, currency]
+              properties:
+                amount: { type: number, format: double, minimum: 0.01 }
+                currency: { type: string, example: UAH }
+      responses:
+        '200':
+          description: Updated budget
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetStatusResponse'
+
+  /api/v1/users/telegram/{telegramUserId}/banks/monobank/sync:
+    post:
+      operationId: syncMonobank
+      parameters:
+        - $ref: '#/components/parameters/TelegramUserId'
+      responses:
+        '200':
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported: { type: integer }
+                  duplicates: { type: integer }
+                  from: { type: string, format: date-time }
+                  to: { type: string, format: date-time }
+                  syncedAt: { type: string, format: date-time }
+
+  /api/v1/users/telegram/{telegramUserId}/imports/csv:
+    post:
+      operationId: importBankCsv
+      parameters:
+        - $ref: '#/components/parameters/TelegramUserId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Import result and current budget status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bank: { type: string, enum: [MONOBANK, PRIVATBANK] }
+                  imported: { type: integer }
+                  duplicates: { type: integer }
+                  status:
+                    $ref: '#/components/schemas/BudgetStatusResponse'
+        '422':
+          description: Unknown/unsupported CSV format
+
+  /api/v1/webhooks/monobank:
+    get:
+      operationId: verifyMonobankWebhook
+      security: []
+      responses:
+        '200': { description: Verification OK }
+    post:
+      operationId: receiveMonobankWebhook
+      security: []
+      parameters:
+        - name: X-Forwarded-Webhook-Secret
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200': { description: Event accepted/idempotently processed }
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  parameters:
+    TelegramUserId:
+      name: telegramUserId
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+  schemas:
+    TelegramProfile:
+      type: object
+      properties:
+        chatId: { type: integer, format: int64 }
+        username: { type: string, nullable: true }
+        firstName: { type: string, nullable: true }
+        lastName: { type: string, nullable: true }
+        languageCode: { type: string, nullable: true }
+    UserResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        telegramUserId: { type: integer, format: int64 }
+        created: { type: boolean }
+    BudgetStatusResponse:
+      type: object
+      required: [date, currency, dailyBudget, allowedToDate, spentToDate, balance]
+      properties:
+        date: { type: string, format: date }
+        currency: { type: string, example: UAH }
+        dailyBudget: { type: number, format: double }
+        allowedToDate: { type: number, format: double }
+        spentToDate: { type: number, format: double }
+        balance: { type: number, format: double }
+        spentToday: { type: number, format: double }
+        projectedTomorrowBalance: { type: number, format: double }
+        remainingMonthBudget: { type: number, format: double }
+        recommendedDailyLimit: { type: number, format: double }
+        countedTransactions: { type: integer }
+        lastSyncedAt: { type: string, format: date-time, nullable: true }

@@ -1,0 +1,67 @@
+{
+  "name": "Budget Bot - Monobank Webhook Gateway",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "GET", "path": "budget-bot/monobank", "responseMode": "responseNode", "options": {} },
+      "id": "verify-webhook",
+      "name": "Monobank - Verify Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-500, -120],
+      "webhookId": "budget-bot-monobank-get"
+    },
+    {
+      "parameters": { "respondWith": "noData", "options": { "responseCode": 200 } },
+      "id": "verify-response",
+      "name": "Return 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [-240, -120]
+    },
+    {
+      "parameters": { "httpMethod": "POST", "path": "budget-bot/monobank", "responseMode": "responseNode", "options": {} },
+      "id": "event-webhook",
+      "name": "Monobank - Transaction Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-500, 140],
+      "webhookId": "budget-bot-monobank-post"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/webhooks/monobank'}}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "X-Forwarded-Webhook-Secret", "value": "={{$env.BANK_WEBHOOK_FORWARD_SECRET}}" }] },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{JSON.stringify($json.body ?? $json)}}",
+        "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
+      },
+      "id": "forward-event",
+      "name": "Backend - Forward Raw Event",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-220, 140]
+    },
+    {
+      "parameters": { "respondWith": "noData", "options": { "responseCode": 200 } },
+      "id": "event-response",
+      "name": "Acknowledge Monobank",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [60, 140]
+    }
+  ],
+  "connections": {
+    "Monobank - Verify Webhook": { "main": [[{ "node": "Return 200", "type": "main", "index": 0 }]] },
+    "Monobank - Transaction Event": { "main": [[{ "node": "Backend - Forward Raw Event", "type": "main", "index": 0 }]] },
+    "Backend - Forward Raw Event": { "main": [[{ "node": "Acknowledge Monobank", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false,
+  "versionId": "646e50bb-272f-4bcf-b429-3dd4937a643b",
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}

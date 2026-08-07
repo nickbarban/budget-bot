@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: budget-bot-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/budgetbot}
+    username: ${DB_USER:budgetbot}
+    password: ${DB_PASSWORD:budgetbot}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+server:
+  port: ${PORT:8080}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+app:
+  timezone: ${APP_TIMEZONE:Europe/Kyiv}
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:change-me}
+  monobank:
+    base-url: https://api.monobank.ua
+    token: ${MONOBANK_TOKEN:}
+    account-id: ${MONOBANK_ACCOUNT_ID:0}

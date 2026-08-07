@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: budgetbot
+      POSTGRES_USER: budgetbot
+      POSTGRES_PASSWORD: budgetbot
+    ports:
+      - "5432:5432"
+    volumes:
+      - budgetbot_pg:/var/lib/postgresql/data
+volumes:
+  budgetbot_pg:
