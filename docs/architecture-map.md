@@ -2,7 +2,7 @@
 status: current
 mode: current
 updated_at: "2026-08-07"
-reflects_commit: "49885c0"
+reflects_commit: "84f97f0"
 language: "java 21"
 build_cmd: "mvn -f budget-bot-backend/pom.xml package"
 test_cmd: "mvn -f budget-bot-backend/pom.xml test"
@@ -29,22 +29,22 @@ frontend: "n8n workflows"
 ## C4 — system as it is
 
 ```mermaid
-C4Container
-    title Current containers — budget-bot
-    Person(owner, "Budget owner", "Telegram user managing a personal daily budget")
-    System_Ext(telegram, "Telegram Bot API", "User chat + file uploads")
-    System_Ext(monobank, "Monobank API", "Personal statements + optional push webhook")
-    Container(backend, "budget-bot-backend", "Java 21 / Spring Boot 3.5", "Domain logic, CSV/API import, budgets, persistence")
-    Container(n8n, "budget-bot-frontend", "n8n workflows", "Transport/orchestration (target); workflows + OpenAPI live here")
-    ContainerDb(pg, "PostgreSQL 17", "Postgres", "Users, budgets, bank_transaction, imports")
-    Rel(owner, telegram, "Commands / CSV upload")
-    Rel(telegram, backend, "POST /api/telegram/webhook (implemented today)")
-    Rel(n8n, telegram, "Target: Telegram trigger + replies")
-    Rel(n8n, backend, "Target: REST /api/v1 + X-API-Key (contract only)")
-    Rel(backend, monobank, "Personal statement sync via RestClient")
-    Rel(monobank, backend, "GET/POST /api/monobank/webhook scaffold")
-    Rel(monobank, n8n, "Target: public webhook then forward raw event")
-    Rel(backend, pg, "JPA + Flyway")
+flowchart TB
+    owner["Budget owner"]
+    telegram["Telegram Bot API"]
+    monobank["Monobank API"]
+    backend["budget-bot-backend<br/>Java 21 Spring Boot 3.5"]
+    n8n["budget-bot-frontend<br/>n8n workflows"]
+    pg[("PostgreSQL 17")]
+
+    owner -->|Commands and CSV upload| telegram
+    telegram -->|POST telegram webhook live| backend
+    n8n -.->|Telegram trigger and replies target| telegram
+    n8n -.->|REST api v1 X-API-Key contract only| backend
+    backend -->|Statement sync RestClient| monobank
+    monobank -->|Webhook scaffold| backend
+    monobank -.->|Public webhook forward target| n8n
+    backend -->|JPA and Flyway| pg
 ```
 
 ## Module inventory
