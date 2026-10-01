@@ -20,6 +20,8 @@ management:
         include: health,info
 app:
   timezone: ${APP_TIMEZONE:Europe/Kyiv}
+  api-key: ${BUDGET_BACKEND_API_KEY:change-me}
+  webhook-forward-secret: ${BANK_WEBHOOK_FORWARD_SECRET:change-me}
   telegram:
     bot-token: ${TELEGRAM_BOT_TOKEN:}
     webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:change-me}

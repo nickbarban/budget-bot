@@ -24,26 +24,68 @@
       "name": "Monobank - Transaction Event",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-500, 140],
+      "position": [-900, 140],
       "webhookId": "budget-bot-monobank-post"
     },
     {
       "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "n8n_variables" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "key", "condition": "isNotEmpty" }] },
+        "returnAll": true
+      },
+      "id": "load-shared-vars",
+      "name": "Load Shared Variables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [-680, 140],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "budget_bot_variables" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "key", "condition": "isNotEmpty" }] },
+        "returnAll": true
+      },
+      "id": "load-app-vars",
+      "name": "Load App Variables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [-460, 140],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const mapRows=(items)=>{const m={}; for (const i of items){ const k=i.json.key; if(k) m[k]=i.json.value; } return m; }; const shared=mapRows($('Load Shared Variables').all()); const app=mapRows($('Load App Variables').all()); const event=$('Monobank - Transaction Event').first().json; return [{json:{vars:{...shared, ...app}, body: event.body ?? event}}];"
+      },
+      "id": "merge-vars",
+      "name": "Merge Variables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-240, 140]
+    },
+    {
+      "parameters": {
         "method": "POST",
-        "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/webhooks/monobank'}}",
+        "url": "={{$json.vars.BUDGET_BACKEND_URL + '/api/v1/webhooks/monobank'}}",
         "sendHeaders": true,
-        "headerParameters": { "parameters": [{ "name": "X-Forwarded-Webhook-Secret", "value": "={{$env.BANK_WEBHOOK_FORWARD_SECRET}}" }] },
+        "headerParameters": { "parameters": [{ "name": "X-Forwarded-Webhook-Secret", "value": "={{$json.vars.BANK_WEBHOOK_FORWARD_SECRET || ''}}" }] },
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{JSON.stringify($json.body ?? $json)}}",
+        "body": "={{JSON.stringify($json.body)}}",
         "options": { "response": { "response": { "neverError": true, "responseFormat": "json" } } }
       },
       "id": "forward-event",
       "name": "Backend - Forward Raw Event",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-220, 140]
+      "position": [0, 140]
     },
     {
       "parameters": { "respondWith": "noData", "options": { "responseCode": 200 } },
@@ -51,12 +93,15 @@
       "name": "Acknowledge Monobank",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
-      "position": [60, 140]
+      "position": [240, 140]
     }
   ],
   "connections": {
     "Monobank - Verify Webhook": { "main": [[{ "node": "Return 200", "type": "main", "index": 0 }]] },
-    "Monobank - Transaction Event": { "main": [[{ "node": "Backend - Forward Raw Event", "type": "main", "index": 0 }]] },
+    "Monobank - Transaction Event": { "main": [[{ "node": "Load Shared Variables", "type": "main", "index": 0 }]] },
+    "Load Shared Variables": { "main": [[{ "node": "Load App Variables", "type": "main", "index": 0 }]] },
+    "Load App Variables": { "main": [[{ "node": "Merge Variables", "type": "main", "index": 0 }]] },
+    "Merge Variables": { "main": [[{ "node": "Backend - Forward Raw Event", "type": "main", "index": 0 }]] },
     "Backend - Forward Raw Event": { "main": [[{ "node": "Acknowledge Monobank", "type": "main", "index": 0 }]] }
   },
   "settings": { "executionOrder": "v1" },

@@ -9,7 +9,7 @@
       "typeVersion": 1.2,
       "position": [-900, 0],
       "webhookId": "budget-bot-telegram",
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
       "parameters": {
@@ -22,13 +22,55 @@
       "position": [-680, 0]
     },
     {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "n8n_variables" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "key", "condition": "isNotEmpty" }] },
+        "returnAll": true
+      },
+      "id": "load-shared-vars",
+      "name": "Load Shared Variables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [-560, -80],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": { "__rl": true, "mode": "name", "value": "budget_bot_variables" },
+        "matchType": "allConditions",
+        "filters": { "conditions": [{ "keyName": "key", "condition": "isNotEmpty" }] },
+        "returnAll": true
+      },
+      "id": "load-app-vars",
+      "name": "Load App Variables",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [-560, 80],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const mapRows=(items)=>{const m={}; for (const i of items){ const k=i.json.key; if(k) m[k]=i.json.value; } return m; }; const shared=mapRows($('Load Shared Variables').all()); const app=mapRows($('Load App Variables').all()); const parsed=$('Parse Telegram Update').first().json; return [{json:{...parsed, vars:{...shared, ...app}}}];"
+      },
+      "id": "merge-vars",
+      "name": "Merge Variables",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-500, 0]
+    },
+    {
       "parameters": { "rules": { "values": [
-        { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{$json.action}}", "rightValue": "START", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "START" },
-        { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{$json.action}}", "rightValue": "HELP", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "HELP" },
-        { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{$json.action}}", "rightValue": "STATUS", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "STATUS" },
-        { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{$json.action}}", "rightValue": "BUDGET", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "BUDGET" },
-        { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{$json.action}}", "rightValue": "SYNC", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "SYNC" },
-        { "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict" }, "conditions": [{ "leftValue": "={{$json.action}}", "rightValue": "CSV", "operator": { "type": "string", "operation": "equals" } }] }, "renameOutput": true, "outputKey": "CSV" }
+        { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "route-start", "leftValue": "={{$json.action}}", "rightValue": "START", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "START" },
+        { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "route-help", "leftValue": "={{$json.action}}", "rightValue": "HELP", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "HELP" },
+        { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "route-status", "leftValue": "={{$json.action}}", "rightValue": "STATUS", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "STATUS" },
+        { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "route-budget", "leftValue": "={{$json.action}}", "rightValue": "BUDGET", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "BUDGET" },
+        { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "route-sync", "leftValue": "={{$json.action}}", "rightValue": "SYNC", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "SYNC" },
+        { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [{ "id": "route-csv", "leftValue": "={{$json.action}}", "rightValue": "CSV", "operator": { "type": "string", "operation": "equals", "name": "filter.operator.equals" } }], "combinator": "and" }, "renameOutput": true, "outputKey": "CSV" }
       ] }, "options": { "fallbackOutput": "extra" } },
       "id": "router",
       "name": "Route Action",
@@ -39,7 +81,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/bootstrap'}}",
+        "url": "={{$('Merge Variables').first().json.vars.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/bootstrap'}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -56,25 +98,25 @@
       "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Budget Backend Auth" } }
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "=👋 <b>Budget Bot</b>\n\nЯ показую, чи вкладаєшся ти в накопичувальний денний бюджет.\n\n<b>Команди:</b>\n/status — поточний стан\n/budget 1000 — встановити денний бюджет\n/sync — синхронізувати Monobank\n/help — допомога\n\nТакож просто надішли CSV-виписку Monobank або PrivatBank.", "additionalFields": { "parse_mode": "HTML" } },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "=👋 <b>Budget Bot</b>\n\nЯ показую, чи вкладаєшся ти в накопичувальний денний бюджет.\n\n<b>Команди:</b>\n/status — поточний стан\n/budget 1000 — встановити денний бюджет\n/sync — синхронізувати Monobank\n/help — допомога\n\nТакож просто надішли CSV-виписку Monobank або PrivatBank.", "additionalFields": { "parse_mode": "HTML" } },
       "id": "start-reply",
       "name": "Telegram - Start Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [80, -440],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "=ℹ️ <b>Команди</b>\n\n/status — показати бюджет\n/budget 1000 — змінити денний бюджет\n/sync — отримати нові Monobank операції\n\n📎 Можна надіслати CSV Monobank або PrivatBank. Формат визначить backend.", "additionalFields": { "parse_mode": "HTML" } },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "=ℹ️ <b>Команди</b>\n\n/status — показати бюджет\n/budget 1000 — змінити денний бюджет\n/sync — отримати нові Monobank операції\n\n📎 Можна надіслати CSV Monobank або PrivatBank. Формат визначить backend.", "additionalFields": { "parse_mode": "HTML" } },
       "id": "help-reply",
       "name": "Telegram - Help Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [-180, -290],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
-      "parameters": { "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/budget/status'}}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": {} },
+      "parameters": { "url": "={{$('Merge Variables').first().json.vars.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/budget/status'}}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": {} },
       "id": "status-api",
       "name": "Backend - Get Status",
       "type": "n8n-nodes-base.httpRequest",
@@ -93,16 +135,16 @@
       "position": [70, -140]
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "={{$json.text}}", "additionalFields": { "parse_mode": "HTML" } },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "={{$json.text}}", "additionalFields": { "parse_mode": "HTML" } },
       "id": "status-reply",
       "name": "Telegram - Status Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [320, -140],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
-      "parameters": { "method": "PUT", "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/budget/daily'}}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "sendBody": true, "contentType": "raw", "rawContentType": "application/json", "body": "={{JSON.stringify({amount:$json.amount,currency:'UAH'})}}", "options": {} },
+      "parameters": { "method": "PUT", "url": "={{$('Merge Variables').first().json.vars.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/budget/daily'}}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "sendBody": true, "contentType": "raw", "rawContentType": "application/json", "body": "={{JSON.stringify({amount:$json.amount,currency:'UAH'})}}", "options": {} },
       "id": "budget-api",
       "name": "Backend - Set Budget",
       "type": "n8n-nodes-base.httpRequest",
@@ -111,16 +153,16 @@
       "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Budget Backend Auth" } }
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "=✅ Денний бюджет встановлено: <b>{{$('Parse Telegram Update').item.json.amount}} грн</b>\n\n/status — подивитися поточний стан.", "additionalFields": { "parse_mode": "HTML" } },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "=✅ Денний бюджет встановлено: <b>{{$('Parse Telegram Update').first().json.amount}} грн</b>\n\n/status — подивитися поточний стан.", "additionalFields": { "parse_mode": "HTML" } },
       "id": "budget-reply",
       "name": "Telegram - Budget Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [80, 20],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
-      "parameters": { "method": "POST", "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/banks/monobank/sync'}}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": {} },
+      "parameters": { "method": "POST", "url": "={{$('Merge Variables').first().json.vars.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $json.telegramUserId + '/banks/monobank/sync'}}", "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth", "options": {} },
       "id": "sync-api",
       "name": "Backend - Sync Monobank",
       "type": "n8n-nodes-base.httpRequest",
@@ -129,13 +171,13 @@
       "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Budget Backend Auth" } }
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "=🔄 Синхронізацію завершено.\n\nНових операцій: <b>{{$json.imported || 0}}</b>\nДублікатів: <b>{{$json.duplicates || 0}}</b>\n\n/status — оновлений бюджет.", "additionalFields": { "parse_mode": "HTML" } },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "=🔄 Синхронізацію завершено.\n\nНових операцій: <b>{{$json.imported || 0}}</b>\nДублікатів: <b>{{$json.duplicates || 0}}</b>\n\n/status — оновлений бюджет.", "additionalFields": { "parse_mode": "HTML" } },
       "id": "sync-reply",
       "name": "Telegram - Sync Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [80, 180],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
       "parameters": { "resource": "file", "fileId": "={{$json.fileId}}", "additionalFields": {} },
@@ -144,12 +186,12 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [-180, 340],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $('Parse Telegram Update').item.json.telegramUserId + '/imports/csv'}}",
+        "url": "={{$('Merge Variables').first().json.vars.BUDGET_BACKEND_URL + '/api/v1/users/telegram/' + $('Merge Variables').first().json.telegramUserId + '/imports/csv'}}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -165,27 +207,30 @@
       "credentials": { "httpHeaderAuth": { "id": "REPLACE_ME", "name": "Budget Backend Auth" } }
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "=📥 <b>Виписку імпортовано</b>\n\nБанк: <b>{{$json.bank}}</b>\nНових операцій: <b>{{$json.imported || 0}}</b>\nДублікатів: <b>{{$json.duplicates || 0}}</b>\n\n/status — подивитися актуальний бюджет.", "additionalFields": { "parse_mode": "HTML" } },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "=📥 <b>Виписку імпортовано</b>\n\nБанк: <b>{{$json.bank}}</b>\nНових операцій: <b>{{$json.imported || 0}}</b>\nДублікатів: <b>{{$json.duplicates || 0}}</b>\n\n/status — подивитися актуальний бюджет.", "additionalFields": { "parse_mode": "HTML" } },
       "id": "csv-reply",
       "name": "Telegram - CSV Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [340, 340],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     },
     {
-      "parameters": { "chatId": "={{$('Parse Telegram Update').item.json.chatId}}", "text": "=Не зрозумів команду. Використай /help або надішли CSV-файл.", "additionalFields": {} },
+      "parameters": { "chatId": "={{$('Parse Telegram Update').first().json.chatId}}", "text": "=Не зрозумів команду. Використай /help або надішли CSV-файл.", "additionalFields": {} },
       "id": "unknown-reply",
       "name": "Telegram - Unknown Reply",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [-180, 500],
-      "credentials": { "telegramApi": { "id": "REPLACE_ME", "name": "Budget Bot Telegram" } }
+      "credentials": { "telegramApi": { "id": "Nb6ZCqihB90Gr4kp", "name": "BudgetBot" } }
     }
   ],
   "connections": {
     "Telegram Trigger": { "main": [[{ "node": "Parse Telegram Update", "type": "main", "index": 0 }]] },
-    "Parse Telegram Update": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
+    "Parse Telegram Update": { "main": [[{ "node": "Load Shared Variables", "type": "main", "index": 0 }]] },
+    "Load Shared Variables": { "main": [[{ "node": "Load App Variables", "type": "main", "index": 0 }]] },
+    "Load App Variables": { "main": [[{ "node": "Merge Variables", "type": "main", "index": 0 }]] },
+    "Merge Variables": { "main": [[{ "node": "Route Action", "type": "main", "index": 0 }]] },
     "Route Action": { "main": [
       [{ "node": "Backend - Bootstrap User", "type": "main", "index": 0 }],
       [{ "node": "Telegram - Help Reply", "type": "main", "index": 0 }],

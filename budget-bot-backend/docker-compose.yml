@@ -6,8 +6,34 @@ services:
       POSTGRES_USER: budgetbot
       POSTGRES_PASSWORD: budgetbot
     ports:
-      - "5432:5432"
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - budgetbot_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U budgetbot -d budgetbot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_HOST_PORT:-8080}:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/budgetbot
+      DB_USER: budgetbot
+      DB_PASSWORD: budgetbot
+      PORT: 8080
+      APP_TIMEZONE: ${APP_TIMEZONE:-Europe/Kyiv}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-change-me}
+      BUDGET_BACKEND_API_KEY: ${BUDGET_BACKEND_API_KEY:-change-me}
+      BANK_WEBHOOK_FORWARD_SECRET: ${BANK_WEBHOOK_FORWARD_SECRET:-change-me}
+      MONOBANK_TOKEN: ${MONOBANK_TOKEN:-}
+      MONOBANK_ACCOUNT_ID: ${MONOBANK_ACCOUNT_ID:-0}
+
 volumes:
   budgetbot_pg:

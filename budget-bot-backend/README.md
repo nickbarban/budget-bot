@@ -37,13 +37,33 @@ A positive balance carries forward. Example: with 1,000 UAH/day, on July 24 the 
 
 ## Run locally
 
+From the repo root:
+
+```bash
+./scripts/deploy-local.sh
+```
+
+That copies `.env` from `.env.example` if needed, builds the backend image, starts PostgreSQL + Spring Boot, and waits for `http://localhost:8080/actuator/health`.
+
+```bash
+./scripts/deploy-local.sh status
+./scripts/deploy-local.sh logs
+./scripts/deploy-local.sh down
+```
+
+Remote Ubuntu (build locally, load image over SSH):
+
+```bash
+cp scripts/deploy-ubuntu-external.env.example scripts/deploy-ubuntu-external.env
+# set DEPLOY_SSH and DEPLOY_REMOTE_DIR
+./scripts/deploy-ubuntu-external.sh
+```
+
+Or, from this directory:
+
 ```bash
 cp .env.example .env
-docker compose up -d
-export $(grep -v '^#' .env | xargs)
-./mvnw spring-boot:run   # if wrapper is generated
-# or
-mvn spring-boot:run
+docker compose up -d --build
 ```
 
 Required secrets:

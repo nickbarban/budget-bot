@@ -51,7 +51,7 @@ Create these in n8n before importing/activating workflows:
   - Header: `X-API-Key`
   - Value: same value as `BUDGET_BACKEND_API_KEY` on the backend.
 
-The workflow uses `BUDGET_BACKEND_URL` from the n8n environment.
+Workflows load `BUDGET_BACKEND_URL` from n8n Data tables `n8n_variables` (shared) and `budget_bot_variables` (this app). See `docs/SETUP.md`.
 
 ## Backend contract
 
@@ -80,7 +80,7 @@ n8n forwards the file to `POST /api/v1/imports/csv`; backend detects the bank au
 
 ## Import into n8n
 
-Import each JSON file via **Workflows → Import from File**. Then assign the two credentials above to the corresponding nodes and set `BUDGET_BACKEND_URL` in the n8n runtime environment.
+Import each JSON file via **Workflows → Import from File**. Then assign Telegram and Header Auth credentials. Create Data tables `n8n_variables` and `budget_bot_variables` (see `docs/SETUP.md`).
 
 ## Recommended deployment
 

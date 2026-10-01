@@ -9,16 +9,43 @@ Required env on backend:
 - webhook forward secret matching n8n `BANK_WEBHOOK_FORWARD_SECRET`
 - Monobank connection/token configuration managed by backend
 
-## 2. n8n environment
+## 2. n8n Data tables (not n8n Variables, not Postgres)
 
-Set:
+Free n8n has no `$vars`. Workflows read config from **Data tables** (Overview → Data tables).
 
-```bash
-BUDGET_BACKEND_URL=http://budget-backend:8080
-BANK_WEBHOOK_FORWARD_SECRET=...
-```
+| Data table | Scope |
+|---|---|
+| `n8n_variables` | shared across every n8n app |
+| `budget_bot_variables` | this app; keys override the shared table |
+| `<project_name>_variables` | next apps, same columns |
 
-If n8n and Spring Boot share Docker/network, keep backend private and use the service hostname.
+Create both tables with columns:
+
+| Column | Type |
+|---|---|
+| `key` | string |
+| `value` | string |
+| `description` | string |
+
+CSV templates to import (or copy rows from):
+
+- `n8n/data-tables/n8n_variables.csv`
+- `n8n/data-tables/budget_bot_variables.csv`
+- `n8n/data-tables/template_project_variables.csv` — copy for the next app
+
+In n8n: create the table with those three columns, then import the matching CSV. Replace `change-me` values after import.
+
+`BUDGET_BACKEND_URL` must be reachable **from the n8n process**, not from your Mac:
+
+| Where n8n runs | URL |
+|---|---|
+| Docker on the same Ubuntu as backend | `http://172.17.0.1:18080` |
+| Directly on that Ubuntu (no container) | `http://127.0.0.1:18080` |
+| n8n Cloud | public HTTPS URL (nginx/caddy/ngrok) |
+
+Do **not** use `host.docker.internal` on Linux — it does not resolve, and the HTTP node fails with “incorrect host (domain) value”. Port is **18080**, not 8080.
+
+App keys win when the same `key` exists in both tables. Edit a cell in the Data tables UI — no workflow change.
 
 ## 3. Credentials
 
@@ -34,7 +61,7 @@ Header: X-API-Key
 Value: <backend api key>
 ```
 
-After importing workflows, replace credential placeholders by selecting the saved credentials in every Telegram/HTTP node.
+After importing workflows, replace credential placeholders by selecting the saved credentials in every Telegram/HTTP node. Data table nodes look up `n8n_variables` and `budget_bot_variables` by name — no extra credential.
 
 ## 4. Import workflows
 
